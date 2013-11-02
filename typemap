@@ -1,0 +1,11 @@
+TYPEMAP
+BEEFContext* T_PTROBJ_BEEF_CONTEXT
+
+INPUT
+T_PTROBJ_BEEF_CONTEXT
+        $var = XS_STATE(BEEFContext *, $arg);
+
+OUTPUT
+T_PTROBJ_BEEF_CONTEXT
+        XS_STRUCT2OBJ($arg, "BEEF", $var);
+
