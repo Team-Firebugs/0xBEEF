@@ -9,13 +9,14 @@ my %hash;
 for my $key(qw(a abcd aaaaaaaabbbbbbb aaaaaaaaaaaaaaaabbbbbbbbbbbbbbb)) {
     for my $i(qw(1000 10_000 1_000_000 )) {
         my $value = "a" x int($i);
-
         my $r = timethese($count, {
             "$i $key - memcached fast store" => sub { $memd->set($key,$value)},
             "$i $key - 0xbeef store" => sub { $beef->store($key,$value)},
             "$i $key - native hash store" => sub { $hash{$key} = $value },
         });
         cmpthese($r); 
+
+        $beef->copy_locally();
         $r = timethese($count, {
             "$i $key - memcached fast get" => sub { my $x = $memd->get($key)},
             "$i $key - 0xbeef get" => sub { $x = $beef->find($key)},

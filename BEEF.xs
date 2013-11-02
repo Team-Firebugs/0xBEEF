@@ -40,11 +40,16 @@ find(BEEFContext* ctx, SV *key)
     OUTPUT:
         RETVAL
 
+void
+copy_locally(BEEFContext *ctx)
+    CODE:
+        shared_pool_copy_locally(ctx);
+
 SV*
 find_locally(BEEFContext* ctx, SV *key)
     CODE:
         if (!ctx->copy)
-            shared_pool_copy_locally(ctx);
+            die("you need to do $obj->copy_locally() before you can do find_locally()");
 
         struct result r;
         if (t_find_locked(ctx->copy,SvPVX(key),&r) == 0) {

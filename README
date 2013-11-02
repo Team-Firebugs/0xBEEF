@@ -77,6 +77,11 @@ import pool:
 reset:
  $b->reset();
 
+
+copy locally:
+ $b->copy_locally();
+ and then you can $b->find_locally("key")
+
     my $b = BEEF->new(0xBEEF); # or any odd int32
     $b->store("key","bzbz");
     my $value = $b->find("key");
