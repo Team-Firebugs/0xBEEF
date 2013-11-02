@@ -1,16 +1,20 @@
-I needed a exportable radix tree, that can hold moderate amounts of data and can 
-be shared between processess, servers, and saved/loaded from files.
+* TLDR - Perl XS module that creates interface for exportable radix tree, 
+  that can hold moderate amounts of data and can be shared between processess, 
+  servers, and saved/loaded from files.
 
 so far the result is not that bad:
     store native hash ($h{$key} = $value} - 6280418.91/s
     store 0xBEEF                          - 1319293.08/s
     store memcached fast                  - 26129.94/s
 
-    get native hash (my $x = $h{$key})    - 7014893.53/s
-    get 0xBEEF locally (copy of the pool) - 2518272/s
-    get 0xBEEF                            - 1041716.01/s
-    get memcached fast                    - 25899.05/s
+    get native hash (my $x = $h{$key})     - 7014893.53/s
+    * calling noop xs method               - 2824236.48/s
+    get 0xBEEF locally (copy of the pool)  - 2518272/s
+    get 0xBEEF                             - 1041716.01/s
+    get memcached fast                     - 25899.05/s
 
+    * this is literally RETVAL = newSVpv("aaaa",5);
+      just to measure the impact of the radix lookup and semaphore locking
 
 the reason I am benchmarking against memcached is because the 0xBEEF pools can
 be exported and forcefully overwritten (like reverse memcache pattern). So you 
