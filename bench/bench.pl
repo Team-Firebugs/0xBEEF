@@ -19,6 +19,7 @@ for my $key(qw(a abcd aaaaaaaabbbbbbb aaaaaaaaaaaaaaaabbbbbbbbbbbbbbb)) {
         $r = timethese($count, {
             "$i $key - memcached fast get" => sub { my $x = $memd->get($key)},
             "$i $key - 0xbeef get" => sub { $x = $beef->find($key)},
+            "$i $key - 0xbeef get locally" => sub { $x = $beef->find_locally($key)},
             "$i $key - native hash get" => sub { my $x = $hash{$key}},
         });
         cmpthese($r); 

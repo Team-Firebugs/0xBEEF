@@ -31,12 +31,27 @@ find(BEEFContext* ctx, SV *key)
     CODE:
         shared_pool_lock(ctx);
         struct result r;
-        if (t_find_locked(ctx,SvPVX(key),&r) == 0) {
+        if (t_find_locked(ctx->pool,SvPVX(key),&r) == 0) {
             RETVAL = newSVpv(r.blob,r.size); 
         } else {
             RETVAL = &PL_sv_undef;
         }
         shared_pool_unlock(ctx,0);
+    OUTPUT:
+        RETVAL
+
+SV*
+find_locally(BEEFContext* ctx, SV *key)
+    CODE:
+        if (!ctx->copy)
+            shared_pool_copy_locally(ctx);
+
+        struct result r;
+        if (t_find_locked(ctx->copy,SvPVX(key),&r) == 0) {
+            RETVAL = newSVpv(r.blob,r.size); 
+        } else {
+            RETVAL = &PL_sv_undef;
+        }
     OUTPUT:
         RETVAL
 

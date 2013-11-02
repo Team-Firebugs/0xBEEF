@@ -61,6 +61,7 @@ struct shared_pool {
     int sem_id;
     int key;
     struct pool *pool;
+    struct pool *copy;
 };
 
 struct result {
@@ -130,8 +131,7 @@ static int t_add(struct shared_pool *sp,char *key, const uint8_t *p, size_t len)
     return shared_pool_unlock(sp,0);
 }
 
-static int t_find_locked(struct shared_pool *sp, char *key, struct result *r) {
-    struct pool *pool = sp->pool;
+inline static int t_find_locked(struct pool *pool, char *key, struct result *r) {
     struct item *head = &pool->root;
     struct item *item = NULL;
     uint8_t current;
@@ -155,6 +155,8 @@ static struct shared_pool *shared_pool_init(int key) {
 
     struct shared_pool *sp;
     Newx(sp,1,struct shared_pool);
+    sp->pool = NULL;
+    sp->copy = NULL;
     struct pool *p;
     int flags = 0666 | IPC_CREAT;
     if ((sp->shm_id = shmget(key, sizeof(*p), flags)) < 0)
@@ -165,7 +167,6 @@ static struct shared_pool *shared_pool_init(int key) {
 
     if ((sp->pool = shmat(sp->shm_id, NULL, 0)) < 0 )
         SAYPX("shmat");
-
 
     sp->key = key;
     // D("shmid: %d(%x) semid: %d(%x)",sp->shm_id,key,sp->sem_id,key + 1);
@@ -188,7 +189,15 @@ static void shared_pool_destroy(struct shared_pool *sp) {
         SAYPX("IPC_RMID failed");
     Safefree(sp);
 }
+void shared_pool_copy_locally(struct shared_pool *sp) {
+    shared_pool_lock(sp);
+    if (sp->copy)
+        Safefree(sp->copy);
 
+    Newx(sp->copy, 1, struct pool);
+    memcpy(sp->copy,sp->pool, POOL_SIZE(sp->pool));
+    shared_pool_unlock(sp,0);
+}
 typedef struct shared_pool BEEFContext;
 
 #endif

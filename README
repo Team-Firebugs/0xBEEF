@@ -7,6 +7,7 @@ so far the result is not that bad:
     store memcached fast                  - 26129.94/s
 
     get native hash (my $x = $h{$key})    - 7014893.53/s
+    get 0xBEEF locally (copy of the pool) - 2518272/s
     get 0xBEEF                            - 1041716.01/s
     get memcached fast                    - 25899.05/s
 
