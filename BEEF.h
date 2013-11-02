@@ -187,6 +187,9 @@ static void shared_pool_destroy(struct shared_pool *sp) {
 
     if (shmctl(sp->shm_id, IPC_RMID, NULL) != 0) 
         SAYPX("IPC_RMID failed");
+
+    if (sp->copy)
+        Safefree(sp->copy);
     Safefree(sp);
 }
 void shared_pool_copy_locally(struct shared_pool *sp) {
