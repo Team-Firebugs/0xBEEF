@@ -55,6 +55,27 @@ about where the data lives, and .len for how big it is.
 
 * simple usage cases:
 
+create new pool:
+ my $b = BEEF->new(odd-shared-memory-segment-id)
+
+store something:
+ $b->store("key","value");
+
+fetch something:
+ $b->find("key");
+ 
+export the pool:
+ my $exported = $b->export();
+ 
+get some info about pool's usage:
+ print $b->info();
+
+import pool:
+ $b->overwrite($blob);
+
+reset:
+ $b->reset();
+
     my $b = BEEF->new(0xBEEF); # or any odd int32
     $b->store("key","bzbz");
     my $value = $b->find("key");
