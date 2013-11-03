@@ -1,13 +1,13 @@
 use strict;
 use warnings;
 use BEEF; 
-use Test::More tests => 4;
+use Test::More tests => 5;
 use Data::Dumper;
 my $val = 'a' x 100;
 
 my $b = BEEF->new(0xBEEF);
 
-$b->store("bzbz",$val);
+is $val, $b->store("bzbz",$val);
 
 is $b->find("bzbz"), $val;
 is $b->find("bzbzz"), undef;

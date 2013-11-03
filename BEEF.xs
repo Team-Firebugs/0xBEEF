@@ -60,18 +60,16 @@ find_locally(BEEFContext* ctx, SV *key)
     OUTPUT:
         RETVAL
 
-int
+void
 store(BEEFContext *ctx, SV *key, SV* value)
-    CODE:
+    PPCODE:
         STRLEN len;
         char *ptr;
         ptr = SvPV(value, len);
         int rc = t_add(ctx,SvPVX(key),ptr,len);
         if (rc < 0)
             die("unable to store item");
-        RETVAL = rc;
-    OUTPUT:
-        RETVAL 
+        XPUSHs(value);
 
 void
 reset(BEEFContext *ctx)

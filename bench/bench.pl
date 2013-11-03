@@ -24,6 +24,14 @@ for my $key(qw(a abcd aaaaaaaabbbbbbb aaaaaaaaaaaaaaaabbbbbbbbbbbbbbb)) {
             "$i $key - native hash get" => sub { my $x = $hash{$key}},
         });
         cmpthese($r); 
+        my $missing = $key . "x";
+        $r = timethese($count, {
+            "$i $key - memcached fast miss" => sub { my $x = $memd->get($missing)},
+            "$i $key - 0xbeef miss" => sub { $x = $beef->find($missing)},
+            "$i $key - 0xbeef get locally miss" => sub { $x = $beef->find_locally($missing)},
+            "$i $key - native hash miss" => sub { my $x = $hash{$missing}},
+        });
+        cmpthese($r); 
         print "*"x80 . "\n";
     }
 }
