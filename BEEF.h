@@ -1,5 +1,5 @@
-#ifndef __FOO_H__
-#define __FOO_H__
+#ifndef __BEEF_H__
+#define __BEEF_H__
 
 #define XS_STATE(type, x) \
     INT2PTR(type, SvROK(x) ? SvIV(SvRV(x)) : SvIV(x))
