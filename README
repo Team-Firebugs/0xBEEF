@@ -1,3 +1,13 @@
+* Install:
+perl:
+    $ perl Makefile.PL
+    $ make && make test && make install
+ruby:
+    $ git clone https://github.com/jackdoe/0xBEEF
+    $ cd 0xBEEF/ruby
+    $ gem build beef.gemspec 
+    $ gem install beef-0.0.1.gem 
+
 * TLDR - Perl XS/Ruby module that creates interface for exportable radix tree, 
   that can hold moderate amounts of data and can be shared between processess, 
   servers, and saved/loaded from files.
@@ -82,14 +92,8 @@ and point to other tree nodes using offsets from 0 (&pool->tree_blob[0])
 and they contain data structure which holds offset from &pool->data_blob[0]
 about where the data lives, and .len for how big it is.
 
-* Install:
-
-    perl Makefile.PL
-    make && make test && make install
-
-* simple usage cases:
-
-- perl
+* Simple usage cases
+  - perl
     create new pool:
      my $b = BEEF->new(odd-shared-memory-segment-id)
 
@@ -115,35 +119,36 @@ about where the data lives, and .len for how big it is.
     copy locally:
      $b->copy_locally();
      and then you can $b->find_locally("key")
-
-        my $b = BEEF->new(0xBEEF); # or any odd int32
-        $b->store("key","bzbz");
-        my $value = $b->find("key");
-
-
-        # export the pool into file
-        my $exported = $b->export();
-        open (my $fh, ">","/tmp/pool.binary") or die $!;
-        print $fh $exported;
-        close($fh);
+    
+    examples:
+    my $b = BEEF->new(0xBEEF); # or any odd int32
+    $b->store("key","bzbz");
+    my $value = $b->find("key");
 
 
-        # load the pool form file
-        my $b = BEEF->new(0xBEF1); # or any odd number
-        open($fh,"<:raw","/tmp/pool.binary") or die $!;
-        my $blob = do { local $/; <$fh>; };
-        close($fh);
-        $b->overwrite($blob);
-        $b->find("key"); # bzbz
+    # export the pool into file
+    my $exported = $b->export();
+    open (my $fh, ">","/tmp/pool.binary") or die $!;
+    print $fh $exported;
+    close($fh);
 
-- ruby
-        x = BEEF.create(0xbeef);
-        x.store("key","value")
-        result = x.find("key")
-        raw = x.export
-        x1 = BEEF.create(0xbeef + 2)
-        x1.overwrite(raw)
-        x1.find("key") # will be equal to "value"
+
+    # load the pool form file
+    my $b = BEEF->new(0xBEF1); # or any odd number
+    open($fh,"<:raw","/tmp/pool.binary") or die $!;
+    my $blob = do { local $/; <$fh>; };
+    close($fh);
+    $b->overwrite($blob);
+    $b->find("key"); # bzbz
+
+  - ruby
+    x = BEEF.create(0xbeef);
+    x.store("key","value")
+    result = x.find("key")
+    raw = x.export
+    x1 = BEEF.create(0xbeef + 2)
+    x1.overwrite(raw)
+    x1.find("key") # will be equal to "value"
 
 * TODO
    + crc the data to validate exported/imported pools
