@@ -7,11 +7,11 @@ so far the result is not that bad:
     store 0xBEEF                          - 1319293.08/s
     store memcached fast                  - 26129.94/s
 
-    get native hash (my $x = $h{$key})     - 7014893.53/s
-    * calling noop xs method               - 2824236.48/s
-    get 0xBEEF locally (copy of the pool)  - 2518272/s
-    get 0xBEEF                             - 1041716.01/s
-    get memcached fast                     - 25899.05/s
+    get native hash (my $x = $h{$key})    - 7014893.53/s
+    * calling noop xs method              - 2824236.48/s
+    get 0xBEEF locally (copy of the pool) - 2518272/s
+    get 0xBEEF                            - 1041716.01/s
+    get memcached fast                    - 25899.05/s
 
     * this is literally RETVAL = newSVpv("aaaa",5);
       just to measure the impact of the radix lookup and semaphore locking
@@ -19,6 +19,24 @@ so far the result is not that bad:
 the reason I am benchmarking against memcached is because the 0xBEEF pools can
 be exported and forcefully overwritten (like reverse memcache pattern). So you 
 can have a generator that populates data on several machines and cache it this way.
+
+
+BEEF can also be used to help memcache like:
+my $key = ...
+my $value = $BEEF->find($key)    ||
+            $memcache->get($key) ||
+            $memcache->set($key,slow_function($parameters));
+and external sources must decide when to put keys into BEEF, 
+since lookup there is only 6-7 times slower then native hash, it is ok
+to to failure lookups for a minute or something, while the external tool
+populates the cached entries.
+
+Of course if you have only 1 machine it makes sense to use it like memcache and do:
+  my $value = $BEEF->find($key) || $BEEF->store($key,slow_function());
+
+At the moment it does not do any kind of serialization. (so it must be wrapped in order
+to hold complex data)
+
 
 * Implementation
 
