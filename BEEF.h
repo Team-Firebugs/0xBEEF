@@ -179,14 +179,21 @@ static struct shared_pool *shared_pool_reset(struct shared_pool *sp) {
 }
 
 static void shared_pool_destroy(struct shared_pool *sp) {
-    if (semctl(sp->sem_id, 1, IPC_RMID ) != 0) 
-        SAYPX("IPC_RMID failed");
 
     if (shmdt(sp->pool) != 0)
         SAYPX("detach failed");
-
-    if (shmctl(sp->shm_id, IPC_RMID, NULL) != 0) 
-        SAYPX("IPC_RMID failed");
+    
+    struct shmid_ds ds;
+    
+    if (shmctl(sp->shm_id, IPC_STAT, &ds) != 0)
+        SAYPX("IPC_STAT failed on sem_id %d",sp->sem_id);
+    // XXX: race
+    if (ds.shm_nattch == 0) {
+        if (semctl(sp->sem_id, 0, IPC_RMID ) != 0) 
+            SAYPX("IPC_RMID failed on sem_id %d",sp->sem_id);
+        if (shmctl(sp->shm_id, IPC_RMID, NULL) != 0) 
+            SAYPX("IPC_RMID failed on shm_id %d",sp->shm_id);
+    }
 
     if (sp->copy)
         Safefree(sp->copy);
