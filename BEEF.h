@@ -69,9 +69,9 @@ struct result {
     uint32_t size;
 };
 
-inline uint8_t symbol(char s) {
+inline int8_t symbol(char s) {
     if (s < 'a' || s > 'z')
-        SAYX(EXIT_FAILURE,"key can contain only characters between 'a' .. 'z', '%c' is invalid",s);
+        return -1;
     return s - 'a';
 }
 
@@ -93,13 +93,16 @@ static int t_add(struct shared_pool *sp,char *key, const uint8_t *p, size_t len)
         return -ENOMSG;
     shared_pool_lock(sp);
 
-    uint8_t current;
+    int8_t current;
     struct item *item = NULL;
     struct pool *pool = sp->pool;
     struct item *head = &pool->root;
     uint32_t off = 0;
     while ((current = *key++)) {
         current = symbol(current);
+        if (current < 0)
+            return shared_pool_unlock(sp,-EBADRQC);
+
         off = head->branch[current];
         if (off == 0) {
             if (pool->tree_pos + sizeof(*item) >= TREE_BLOB_SIZE - 1)
@@ -116,7 +119,7 @@ static int t_add(struct shared_pool *sp,char *key, const uint8_t *p, size_t len)
         head = item;
     }
     if (!item)
-        SAYX(EXIT_FAILURE,"unable to store");
+        return shared_pool_unlock(sp,-EFAULT);
     
     if (item->data.off == 0 || item->data.len < len) {
         if (pool->data_pos + len >= DATA_BLOB_SIZE)
@@ -134,10 +137,14 @@ static int t_add(struct shared_pool *sp,char *key, const uint8_t *p, size_t len)
 inline static int t_find_locked(struct pool *pool, char *key, struct result *r) {
     struct item *head = &pool->root;
     struct item *item = NULL;
-    uint8_t current;
+    int8_t current;
     uint32_t off = 0;
     while ((current = *key++)) {
-        off = head->branch[symbol(current)];
+        current = symbol(current);
+        if (current < 0)
+            return -ENOKEY;
+
+        off = head->branch[current];
         if (off == 0)
             return -ENOKEY;
 
@@ -180,6 +187,7 @@ static struct shared_pool *shared_pool_reset(struct shared_pool *sp) {
 
 static void shared_pool_destroy(struct shared_pool *sp) {
 
+    shared_pool_lock(sp);
     if (shmdt(sp->pool) != 0)
         SAYPX("detach failed");
     
@@ -187,18 +195,20 @@ static void shared_pool_destroy(struct shared_pool *sp) {
     
     if (shmctl(sp->shm_id, IPC_STAT, &ds) != 0)
         SAYPX("IPC_STAT failed on sem_id %d",sp->sem_id);
-    // XXX: race
     if (ds.shm_nattch == 0) {
         if (semctl(sp->sem_id, 0, IPC_RMID ) != 0) 
             SAYPX("IPC_RMID failed on sem_id %d",sp->sem_id);
         if (shmctl(sp->shm_id, IPC_RMID, NULL) != 0) 
             SAYPX("IPC_RMID failed on shm_id %d",sp->shm_id);
+    } else {
+       shared_pool_unlock(sp,0); 
     }
 
     if (sp->copy)
         Safefree(sp->copy);
     Safefree(sp);
 }
+
 void shared_pool_copy_locally(struct shared_pool *sp) {
     shared_pool_lock(sp);
     if (sp->copy)
