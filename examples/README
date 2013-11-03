@@ -1,0 +1,13 @@
+to ilustrate simple cross process usage
+just start the two dancer apps:
+$ perl web-get.pl &
+$ perl web-put.pl &
+
+to store: http://localhost:3001/bzbz/stored-value
+stores key bzbz with value 'stored-value'
+
+to get:http://localhost:3000/bzbz
+displays 'stored-value'
+
+
+
