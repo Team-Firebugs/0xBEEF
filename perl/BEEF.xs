@@ -36,7 +36,7 @@ find(BEEFContext* ctx, SV *key)
         } else {
             RETVAL = &PL_sv_undef;
         }
-        shared_pool_unlock(ctx,0);
+        shared_pool_unlock(ctx);
     OUTPUT:
         RETVAL
 
@@ -79,22 +79,22 @@ reset(BEEFContext *ctx)
 void
 overwrite(BEEFContext *ctx, SV *blob)
     CODE:
-        shared_pool_lock(ctx);
         STRLEN len;
         char *ptr;
         ptr = SvPV(blob, len);
         if (len > sizeof(*ctx->pool))
             die("blob size mismatch: expected %zu got %zu",sizeof(*ctx->pool),len);
 
+        shared_pool_lock(ctx);
         memcpy(ctx->pool,ptr,len);
-        shared_pool_unlock(ctx,0);
+        shared_pool_unlock(ctx);
 
 SV*
 export(BEEFContext *ctx)
     CODE:
         shared_pool_lock(ctx);
         RETVAL = newSVpvn((char *) ctx->pool,POOL_SIZE(ctx->pool)); 
-        shared_pool_unlock(ctx,0);
+        shared_pool_unlock(ctx);
     OUTPUT:
         RETVAL
 

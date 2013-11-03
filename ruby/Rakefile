@@ -1,0 +1,10 @@
+require 'rake/extensiontask'
+require 'rake/testtask'
+
+spec = Gem::Specification.load('beef.gemspec')
+Rake::ExtensionTask.new('beef', spec);
+Rake::TestTask.new do |t|
+      t.libs << 'test'
+end
+desc "Run tests"
+task :default => :compile
