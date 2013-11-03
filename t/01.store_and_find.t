@@ -8,12 +8,15 @@ my $val = 'a' x 100;
 my $b = BEEF->new(0xBEEF);
 
 $b->store("bzbz",$val);
+
 is $b->find("bzbz"), $val;
 is $b->find("bzbzz"), undef;
 
 $b->reset();
 is $b->find("bzbz"), undef;
+
 eval {
     $b->store("AAA","a");
 };
-like $@, qr/invalid/;
+like $@, qr/unable to store/;
+
